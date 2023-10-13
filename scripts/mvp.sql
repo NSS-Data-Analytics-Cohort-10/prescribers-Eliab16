@@ -31,15 +31,15 @@ ans
 	
 -- 	ans 
 	
-	 SELECT specialty_description,count(total_claim_count) AS sum_claim_count
+	 SELECT specialty_description,sum(total_claim_count) AS total_claim_count
 	FROM prescriber
 	INNER JOIN prescription
 	USING(npi)
 	inner join drug 
 	using (drug_name)
 	GROUP BY specialty_description
-	order by sum_claim_count DESC;
-	 ans 175734......'Nurse practitioner'
+	order by total_claim_count DESC;
+	 ans 'Family practice'
 	 
 	 
 	 
@@ -51,14 +51,14 @@ ans
 
    -- b. Which specialty had the most total number of claims for opioids?	 
 	 
-	  SELECT specialty_description,opioid_drug_flag,count(total_claim_count) AS sum_claim_count
+	  SELECT specialty_description,opioid_drug_flag,sum(total_claim_count) AS total_claim_count
 	FROM prescriber
 	INNER JOIN prescription
 	USING(npi)
 	inner join drug 
 	using (drug_name)
 	GROUP BY specialty_description,opioid_drug_flag
-	order by sum_claim_count DESC;
+	order by total_claim_count DESC;
 	
 -- 	ans 'Family Practice'
 	
@@ -75,12 +75,13 @@ ans
 	
 	--ans
 	
-	  SELECT generic_name,total_drug_cost
+	  SELECT generic_name,sum(total_drug_cost)AS total_cost
 	  FROM prescription
 	  INNER JOIN drug
 	  USING(drug_name)
 	  GROUP BY generic_name,total_drug_cost
-	  order by total_drug_cost DESC;
+	  order by total_cost DESC
+	  LIMIT 1;
 	  
 	  --'PIRFENIDONE'...... total_drug_cost------'2829174.3'
 	  
@@ -135,6 +136,17 @@ SELECT
 	INNER JOIN drug
 	USING(drug_name)
 	
+	
+	
+	SELECT 
+	CONCAT('$',FORMAT(SUM(CASE WHEN drug_name LIKE '%opioid%'
+	THEN  sum(total_drug_cost) ELSE 0 END),2)) AS opioid_cost,
+	CONCAT('$',FORMAT(SUM(CASE WHEN drug_name LIKE '%antibiotics%'	
+	THEN sum(total_drug_cost) ELSE 0 END),2)) AS antibiotic_cost
+	FROM prescription
+	INNER JOIN drug
+	USING(drug_name)
+	
 						  
        
 	 
@@ -144,16 +156,22 @@ SELECT
 --     a. How many CBSAs are in Tennessee? **Warning:**\
 	The cbsa table contains information for all states, not just Tennessee.
 	
+		
+	SELECT DISTINCT(cbsaname)
+	FROM cbsa
+	WHERE cbsaname LIKE '%TN%';
 	
-	SELECT COUNT(cbsa),f.state 
+	---ans 10
+	
+	
+	
+	
+	ANS '42'SELECT DISTINCT(cbsaname)
 	FROM cbsa c
 	LEFT JOIN fips_county f
 	ON c.fipscounty=f.fipscounty
 	WHERE state LIKE '%TN%'
-	GROUP BY f.state
-	ORDER BY count(cbsa);
-	
-	ANS '42'
+	GROUP BY f.state;
 	
 
 	
@@ -244,7 +262,9 @@ SELECT
 --7. The goal of this exercise is to generate a full list of all pain management specialists in Nashville
 and the number of claims they had for each opioid. **Hint:** The results from all 3 parts will have 637 rows.
 
-select*from fips_county;
+select*from cbsa
+WHERE fipscounty=
+
 
     a. First, create a list of all npi/drug_name combinations for pain management specialists (specialty_description = 'Pain Management) in the city of Nashville (nppes_provider_city = 'NASHVILLE'), where the drug is an opioid (opiod_drug_flag = 'Y'). **Warning:** Double-check your query before running it. You will only need to use the prescriber and drug tables since you don't need the claims numbers yet.
 

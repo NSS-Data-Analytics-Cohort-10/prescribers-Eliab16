@@ -134,7 +134,7 @@ SELECT
 	THEN total_drug_cost ELSE 0 END),2)) AS antibiotic_cost
 	FROM prescription
 	INNER JOIN drug
-	USING(drug_name)
+	USING(drug_name);
 	
 	
 	
@@ -153,9 +153,8 @@ SELECT
     
 	
 -- 5. 
---     a. How many CBSAs are in Tennessee? **Warning:**\
-	The cbsa table contains information for all states, not just Tennessee.
-	
+--     a. How many CBSAs are in Tennessee? **Warning:**\ The cbsa table contains information for all states, not just Tennessee.
+
 		
 	SELECT DISTINCT(cbsaname)
 	FROM cbsa
@@ -164,17 +163,7 @@ SELECT
 	---ans 10
 	
 	
-	
-	
-	ANS '42'SELECT DISTINCT(cbsaname)
-	FROM cbsa c
-	LEFT JOIN fips_county f
-	ON c.fipscounty=f.fipscounty
-	WHERE state LIKE '%TN%'
-	GROUP BY f.state;
-	
-
-	
+		
 
 --     b. Which cbsa has the largest combined population? Which has the smallest? 
 	Report the CBSA name and total population.
@@ -195,21 +184,21 @@ SELECT
 	Report the county name and population.
 	
 	SELECT c.cbsa,c.cbsaname,sum(population) AS total_population,f.county
-	FROM  cbsa c
-	INNER JOIN fips_county f
+	FROM  population p
+	LEFT JOIN cbsa c
 	USING(fipscounty)
-	INNER JOIN population p
+	LEFT JOIN fips_county f
 	USING (fipscounty)
 	WHERE cbsa IS NULL
 	GROUP BY c.cbsa,c.cbsaname,f.county
 	ORDER BY total_population DESC;
+	  
+	  
+	--ANS 'SEVIER'  '95523'
 	
 	
 	
-	--NOT FINISHED
-	
-	
-		
+			
 --6	   -- a. Find all rows in the prescription table where total_claims is at least 3000.
 	
 	Report the drug_name and the total_claim_count.
@@ -243,6 +232,7 @@ SELECT
 
    -- c. Add another column to you answer from the previous part which gives the prescriber first and last name associated with each row.
 	
+	--ANS
 	
 	SELECT  nppes_provider_first_name,nppes_provider_last_org_name,drug_name, SUM(total_claim_count) AS total_clims,
 	CASE WHEN opioid_drug_flag='Y' THEN 'opioid'
@@ -253,8 +243,7 @@ SELECT
 	USING(npi)
 	INNER JOIN drug
 	USING(drug_name)
-	
-	WHERE total_claim_count >= 3000
+		WHERE total_claim_count >= 3000
 	GROUP BY nppes_provider_first_name,nppes_provider_last_org_name,drug_name,opioid_drug_flag;
 	
 	
@@ -262,12 +251,29 @@ SELECT
 --7. The goal of this exercise is to generate a full list of all pain management specialists in Nashville
 and the number of claims they had for each opioid. **Hint:** The results from all 3 parts will have 637 rows.
 
-select*from cbsa
-WHERE fipscounty=
 
-
-    a. First, create a list of all npi/drug_name combinations for pain management specialists (specialty_description = 'Pain Management) in the city of Nashville (nppes_provider_city = 'NASHVILLE'), where the drug is an opioid (opiod_drug_flag = 'Y'). **Warning:** Double-check your query before running it. You will only need to use the prescriber and drug tables since you don't need the claims numbers yet.
-
+   a. First, create a list of all npi/drug_name combinations for pain management specialists (specialty_description = 'Pain Management) in the city of Nashville (nppes_provider_city = 'NASHVILLE')
+  , where the drug is an opioid (opiod_drug_flag = 'Y'). Warning: Double-check your query before running it.
+You will only need to use the prescriber and drug tables since you don't need the claims numbers yet.
+   
+   
+																							   
+								
+	
     b. Next, report the number of claims per drug per prescriber. Be sure to include all combinations, whether or not the prescriber had any claims. You should report the npi, the drug name, and the number of claims (total_claim_count).
     
     c. Finally, if you have not done so already, fill in any missing values for total_claim_count with 0. Hint - Google the COALESCE function.
+		
+																							   
+								SELECT DISTINCT(cbsaname)
+	FROM cbsa c
+	LEFT JOIN fips_county f
+	ON c.fipscounty=f.fipscounty
+	WHERE state LIKE '%TN%'
+	GROUP BY f.state;SELECT DISTINCT(cbsaname)
+	FROM cbsa c
+	LEFT JOIN fips_county f
+	ON c.fipscounty=f.fipscounty
+	WHERE state LIKE '%TN%'
+	GROUP BY f.state;															   You will only need to use the prescriber and drug tables since you don't need the claims numbers yet.
+																						   

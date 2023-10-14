@@ -1,6 +1,6 @@
 1. 
-  --  a. Which prescriber had the highest total number of claims (totaled over all drugs)? Report the npi and the total number of claims.
-ans	  
+  -- 1 a. Which prescriber had the highest total number of claims (totaled over all drugs)? Report the npi and the total number of claims.
+	  
 	SELECT npi, sum(total_claim_count) AS total_drugs
 	FROM prescriber
 	INNER JOIN prescription
@@ -9,7 +9,7 @@ ans
 	order by total_drugs DESC
 	LIMIT 1;
 	
-	ANS 99707
+--	ANS 99707
 	
 	
     
@@ -67,10 +67,19 @@ ans
 
    -- c. **Challenge Question:** Are there any specialties that appear in the prescriber table that have no associated prescriptions in the prescription table?
 
+
+-- SELECT DISTINCT P.specialty_description
+   FROM prescriber P
+   LEFT JOIN prescription ps
+   USING(npi)
+   WHERE ps.npi IS NULL;
+	
+
+
 --     d. **Difficult Bonus:** *Do not attempt until you have solved all other problems!* For each specialty, report the percentage of total claims by that specialty which are for opioids. Which specialties have a high percentage of opioids?
 
 3. 
-   --- a. Which drug (generic_name) had the highest total drug cost?
+   --- 3a. Which drug (generic_name) had the highest total drug cost?
 	
 	
 	--ans
@@ -127,30 +136,22 @@ ans
 	  
 --ans
 
-SELECT 
-	CONCAT('$',FORMAT(SUM(CASE WHEN drug_name LIKE '%opioid%'
-	THEN total_drug_cost ELSE 0 END),2)) AS opioid_cost,
-	CONCAT('$',FORMAT(SUM(CASE WHEN drug_name LIKE '%antibiotics%'	
-	THEN total_drug_cost ELSE 0 END),2)) AS antibiotic_cost
-	FROM prescription
-	INNER JOIN drug
-	USING(drug_name);
-	
-	
-	
-	SELECT 
-	CONCAT('$',FORMAT(SUM(CASE WHEN drug_name LIKE '%opioid%'
-	THEN  sum(total_drug_cost) ELSE 0 END),2)) AS opioid_cost,
-	CONCAT('$',FORMAT(SUM(CASE WHEN drug_name LIKE '%antibiotics%'	
-	THEN sum(total_drug_cost) ELSE 0 END),2)) AS antibiotic_cost
-	FROM prescription
-	INNER JOIN drug
-	USING(drug_name)
-	
-						  
+SELECT (CASE WHEN d.opioid_drug_flag ='Y'
+THEN 'opioid'
+WHEN d.antibiotic_drug_flag = 'Y'
+THEN 'antibiotic'				
+ELSE 'neither' END)AS drug_type,	
+CAST(SUM(p.total_drug_cost) AS money)AS total_drug_cost
+FROM drug AS d		
+LEFT JOIN prescription AS p	
+USING(drug_name)
+WHERE opioid_drug_flag='Y' OR	
+antibiotic_drug_flag='Y'	
+GROUP BY d.antibiotic_drug_flag,d.opioid_drug_flag
+ORDER BY total_drug_cost DESC;		
        
-	 
-    
+	--  ans  opioid '$105,080,626.37'
+             antibiotic '$38,435,121.26'
 	
 -- 5. 
 --     a. How many CBSAs are in Tennessee? **Warning:**\ The cbsa table contains information for all states, not just Tennessee.
@@ -212,7 +213,7 @@ SELECT
 	WHERE total_claim_count >= 3000
 	GROUP BY drug_name;
 	
-	
+	----ans 7 total	 
 	
 	   
 	   	
@@ -228,7 +229,8 @@ SELECT
 	USING(drug_name)
 	WHERE total_claim_count >= 3000
 	GROUP BY drug_name,opioid_drug_flag;
-	
+	  
+	  --ans  drug_name  HYDROCODONE-ACETAMNOPHEN AND OXYCODONEHCL
 
    -- c. Add another column to you answer from the previous part which gives the prescriber first and last name associated with each row.
 	
@@ -246,34 +248,59 @@ SELECT
 		WHERE total_claim_count >= 3000
 	GROUP BY nppes_provider_first_name,nppes_provider_last_org_name,drug_name,opioid_drug_flag;
 	
-	
+	----total 9 rows
 
 --7. The goal of this exercise is to generate a full list of all pain management specialists in Nashville
 and the number of claims they had for each opioid. **Hint:** The results from all 3 parts will have 637 rows.
+
 
 
    a. First, create a list of all npi/drug_name combinations for pain management specialists (specialty_description = 'Pain Management) in the city of Nashville (nppes_provider_city = 'NASHVILLE')
   , where the drug is an opioid (opiod_drug_flag = 'Y'). Warning: Double-check your query before running it.
 You will only need to use the prescriber and drug tables since you don't need the claims numbers yet.
    
-   
-																							   
+  ---ans 
+	
+	SELECT p.npi,d.drug_name																						  
+	FROM prescriber AS p
+	CROSS JOIN drug AS d
+	WHERE p.specialty_description='Pain Managment'
+	AND p.nppes_provider_city= 'NASHVILLE'
+	AND d.opioid_drug_flag='Y'; 																				  
+																							  
+																					  
+												  
+																							  
+																							  
+																							  
+													  
+																		  
 								
 	
-    b. Next, report the number of claims per drug per prescriber. Be sure to include all combinations, whether or not the prescriber had any claims. You should report the npi, the drug name, and the number of claims (total_claim_count).
-    
-    c. Finally, if you have not done so already, fill in any missing values for total_claim_count with 0. Hint - Google the COALESCE function.
+   b. Next, report the number of claims per drug per prescriber. Be sure to include all combinations, whether or not the prescriber had any claims. You should report the npi, the drug name, and the number of claims (total_claim_count).
+      
+ SELECT p.npi,d.drug_name,p2.total_claim_count
+FROM prescriber AS p
+CROSS JOIN drug AS d
+LEFT JOIN prescription AS p2
+ON p.npi=p2.npi
+AND d.drug_name=p2.drug_name
+WHERE p.specialty_description = 'Pain Management'																							  
+AND P.nppes_provider_city='NASHVILLE'																							  
+AND d.opioid_drug_flag='Y';																							  
+   
+-- got 637 rows																							  
+																							  
+ --   c. Finally, if you have not done so already, fill in any missing values for total_claim_count with 0. Hint - Google the COALESCE function.
 		
-																							   
-								SELECT DISTINCT(cbsaname)
-	FROM cbsa c
-	LEFT JOIN fips_county f
-	ON c.fipscounty=f.fipscounty
-	WHERE state LIKE '%TN%'
-	GROUP BY f.state;SELECT DISTINCT(cbsaname)
-	FROM cbsa c
-	LEFT JOIN fips_county f
-	ON c.fipscounty=f.fipscounty
-	WHERE state LIKE '%TN%'
-	GROUP BY f.state;															   You will only need to use the prescriber and drug tables since you don't need the claims numbers yet.
+--ans																							   
+ SELECT p.npi,d.drug_name,COALESCE (P2.total_claim_count,0)
+FROM prescriber AS p
+CROSS JOIN drug AS d
+LEFT JOIN prescription AS p2
+ON p.npi=p2.npi
+AND d.drug_name=p2.drug_name
+WHERE p.specialty_description = 'Pain Management'																							  
+AND P.nppes_provider_city='NASHVILLE'																							  
+AND d.opioid_drug_flag='Y';							
 																						   
